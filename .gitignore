@@ -1,0 +1,14 @@
+# Compiled Binaries
+*.exe
+*.o
+*.obj
+
+# Personal Notes
+ideas.md
+
+# Build & IDE directories
+build/
+.vscode/
+.idea/
+.agents/
+.system_generated/
