@@ -8,8 +8,7 @@ A clean, standard implementation of a Least Recently Used (LRU) Cache in C++17. 
 ```text
 lru_systemDesign/
 ├── lru_classic.cpp      # Single-threaded implementation & detailed demonstration
-├── lru_concurrent.cpp   # Multi-threaded implementation & concurrent demo
-└── README.md            # Detailed project documentation
+└── lru_concurrent.cpp   # Multi-threaded implementation & concurrent demo
 ```
 
 ---
@@ -82,3 +81,24 @@ This version implements thread safety to support parallel reads and writes.
 g++ -std=c++17 lru_concurrent.cpp -o lru_concurrent.exe -lpthread
 .\lru_concurrent.exe
 ```
+
+### Multithreading Concepts Explained:
+
+#### A. Mutual Exclusion (`std::mutex` & `std::lock_guard`)
+In a concurrent environment, if two threads attempt to modify doubly linked list pointers at the exact same microsecond, the list will get corrupted, resulting in program crashes.
+- We add a `std::mutex cache_mutex` as a private member in `LRUCache`.
+- The public functions (`get`, `put`, `print`) lock the mutex using `std::lock_guard<std::mutex> lock(cache_mutex)` at the start of their scope.
+- `std::lock_guard` implements the **RAII (Resource Acquisition Is Initialization)** pattern. It locks the mutex on instantiation and automatically unlocks it when the function exits (even if exceptions are thrown), avoiding any risk of deadlocks.
+
+#### B. Passing References to Threads (`std::ref`)
+C++ threads copy their arguments by default. However, mutexes are non-copyable resources. To pass the cache instance to worker threads without copying it, we wrap it in `std::ref()`:
+```cpp
+std::thread t1(run_writer, std::ref(cache));
+```
+This forces `std::thread` to pass the original cache instance by reference instead of making a copy.
+
+#### C. Reader/Writer Simulation & Output Lock
+- **run_writer:** Simulates background database updates or user sessions writing data to the cache.
+- **run_reader:** Simulates client traffic reading from the cache concurrently.
+- **Console Lock (`cout_mutex`):** To prevent threads from writing to stdout simultaneously (which would garble and mix the text output lines), we use a separate lock `cout_mutex` before console print statements.
+- **`join()`:** Keeps the `main()` function active until worker threads complete their execution.
