@@ -5,6 +5,7 @@
 
 # Personal Notes
 ideas.md
+lru_concurrent.cpp
 
 # Build & IDE directories
 build/
